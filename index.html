@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1D9E75">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="部活トレ">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>部活トレーニング</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Meiryo',sans-serif;background:#f5f7f5;color:#1a1a1a;min-height:100vh;padding:16px;padding-bottom:40px;max-width:600px;margin:0 auto}
+h1{font-size:22px;font-weight:700;color:#1a1a1a;display:inline-flex;align-items:center;gap:8px}
+.subtitle{font-size:13px;color:#666;margin-top:4px}
+.header{text-align:center;margin-bottom:18px}
+.timer-block{background:#fff;border-radius:18px;padding:22px 20px;text-align:center;margin-bottom:14px;border:1px solid #e0e0e0;box-shadow:0 2px 10px rgba(0,0,0,0.07)}
+.timer-display{font-size:58px;font-weight:700;color:#1a1a1a;letter-spacing:3px;font-variant-numeric:tabular-nums;font-family:'Courier New',monospace}
+.timer-label{font-size:14px;color:#666;margin-top:6px;min-height:20px;font-weight:500}
+.progress-bar-wrap{background:#e8e8e8;border-radius:4px;height:8px;margin-top:14px;overflow:hidden}
+.progress-bar{height:8px;background:#1D9E75;border-radius:4px;width:0%;transition:width 0.8s linear}
+.controls{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.btn{padding:11px 24px;border-radius:10px;border:1px solid #ccc;background:#fff;color:#1a1a1a;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;-webkit-tap-highlight-color:transparent}
+.btn:hover{background:#f0f0f0}
+.btn:active{transform:scale(0.97)}
+.btn-start{background:#1D9E75;border-color:#1D9E75;color:#fff;font-size:16px;padding:13px 36px}
+.btn-start:hover{background:#0F6E56;border-color:#0F6E56}
+.btn-start:disabled{background:#aaa;border-color:#aaa;cursor:default;transform:none}
+.total-info{display:flex;justify-content:space-between;font-size:13px;color:#666;margin-bottom:10px;padding:0 2px}
+.current-banner{background:#1D9E75;color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700;margin-bottom:10px;display:none}
+.menu-list{display:flex;flex-direction:column;gap:8px}
+.menu-item{border:1px solid #e0e0e0;border-radius:14px;padding:12px 16px;cursor:pointer;background:#fff;-webkit-tap-highlight-color:transparent}
+.menu-item.active{border-color:#1D9E75;background:#E1F5EE}
+.menu-item.done{opacity:0.5;background:#f8f8f8}
+.menu-item.done .item-name{text-decoration:line-through;color:#999}
+.item-header{display:flex;align-items:center;gap:10px}
+.item-num{font-size:12px;color:#aaa;min-width:18px;font-weight:700}
+.item-name{font-size:15px;font-weight:600;color:#1a1a1a;flex:1}
+.item-time{font-size:13px;color:#666;white-space:nowrap}
+.item-desc{font-size:13px;color:#555;margin-top:8px;line-height:1.65;padding-left:28px;display:none;border-top:1px solid #eee;padding-top:8px}
+.item-desc.open{display:block}
+.item-check{width:22px;height:22px;border-radius:50%;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;flex-shrink:0;transition:all 0.2s}
+.menu-item.done .item-check{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.menu-item.active .item-check{border-color:#1D9E75;color:#1D9E75}
+
+/* 完了後パネル */
+.done-panel{display:none;background:#fff;border-radius:18px;border:1px solid #e0e0e0;padding:24px 20px;margin-top:16px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.07)}
+.done-panel h2{font-size:24px;font-weight:700;margin-bottom:6px}
+.done-panel .done-sub{font-size:14px;color:#666;margin-bottom:20px}
+.done-panel .finish-time{font-size:14px;color:#1D9E75;font-weight:700;margin-bottom:18px}
+
+/* Discord送信エリア */
+.discord-area{background:#f0faf6;border-radius:12px;padding:16px;text-align:left}
+.discord-area label{font-size:13px;font-weight:700;color:#1a1a1a;display:block;margin-bottom:8px}
+.discord-area .already-done{font-size:14px;color:#1D9E75;font-weight:600;text-align:center;padding:8px 0}
+.name-input{width:100%;padding:11px 14px;border:1px solid #ccc;border-radius:10px;font-size:15px;outline:none;font-family:inherit;-webkit-appearance:none}
+.name-input:focus{border-color:#1D9E75;box-shadow:0 0 0 2px rgba(29,158,117,0.15)}
+.btn-discord{width:100%;margin-top:10px;padding:13px;background:#5865F2;border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent}
+.btn-discord:hover{background:#4752C4}
+.btn-discord:disabled{background:#aaa;cursor:default}
+.send-status{font-size:13px;margin-top:10px;text-align:center;min-height:18px}
+.send-ok{color:#1D9E75;font-weight:700}
+.send-ng{color:#e53}
+
+/* Webhook設定 */
+.webhook-setting{margin-top:16px;background:#fff;border-radius:14px;border:1px solid #e0e0e0;padding:16px}
+.webhook-setting summary{font-size:13px;font-weight:700;color:#555;cursor:pointer;user-select:none}
+.webhook-setting p{font-size:12px;color:#888;margin:8px 0 6px}
+.webhook-input{width:100%;padding:9px 12px;border:1px solid #ccc;border-radius:8px;font-size:12px;outline:none;font-family:monospace;word-break:break-all}
+.webhook-input:focus{border-color:#1D9E75}
+.btn-save-wh{margin-top:8px;padding:8px 16px;border-radius:8px;border:1px solid #1D9E75;background:#fff;color:#1D9E75;font-size:13px;font-weight:600;cursor:pointer}
+.btn-save-wh:active{background:#E1F5EE}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <h1>🏃 部活トレーニング</h1>
+    <p class="subtitle">開始ボタンを押してスタート ／ 各種目タップで説明表示</p>
+  </div>
+
+  <div class="timer-block">
+    <div class="timer-display" id="timerDisplay">00:00</div>
+    <div class="timer-label" id="timerLabel">準備中 — 開始ボタンを押してください</div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="controls">
+      <button class="btn btn-start" id="startBtn" onclick="startPause()"><i class="ti ti-player-play"></i> 開始</button>
+      <button class="btn" onclick="resetAll()"><i class="ti ti-refresh"></i> リセット</button>
+    </div>
+  </div>
+
+  <div class="total-info">
+    <span id="progressText">0 / 10 完了</span>
+    <span id="totalTimeLeft">合計目安：約25分</span>
+  </div>
+  <div id="currentBanner" class="current-banner"></div>
+  <div class="menu-list" id="menuList"></div>
+
+  <!-- 完了後パネル -->
+  <div class="done-panel" id="donePanel">
+    <h2>🎉 お疲れ様！</h2>
+    <p class="done-sub">全メニュー完了！よく頑張りました。</p>
+    <div class="finish-time" id="finishTimeText"></div>
+
+    <div class="discord-area" id="discordArea">
+      <div id="discordForm">
+        <label for="nameInput"><i class="ti ti-user"></i> 名前を入力しよう</label>
+        <input type="text" class="name-input" id="nameInput" placeholder="例：田中太郎" maxlength="30" autocomplete="name">
+        <button class="btn-discord" id="discordBtn" onclick="sendToDiscord()">
+          ✅ 完了を記録する
+        </button>
+        <div class="send-status" id="sendStatus"></div>
+      </div>
+      <div id="alreadyDone" class="already-done" style="display:none">
+        ✅ 今日はもう記録済みです
+      </div>
+    </div>
+  </div>
+
+  <!-- 設定（非表示） -->
+  <details id="whSetting" style="display:none">
+    <summary></summary>
+    <input type="url" id="webhookInput" autocomplete="off">
+    <button onclick="saveWebhook()"></button>
+    <div id="whSaveMsg"></div>
+  </details>
+</div>
+
+<script>
+const MENUS = [
+  {name:"ラウンジ（ランジ）",time:120,desc:"前後に足を大きく踏み出し、膝を90°に曲げる。体幹はまっすぐキープ。左右各10〜15回 × 2セット。"},
+  {name:"体幹トレーニング（7種目）",time:600,desc:"① プランク 60秒 → ② サイドプランク左右 各30秒 → ③ 片足上げ左右 各30秒 → ④ 仰向け片足上げ 各30秒 → ⑤ 片手片足プランク 各30秒 → ⑥ 肘伸ばしプランク 30秒 → ⑦ マウンテンクライマー 30秒。体が一直線になるよう意識！"},
+  {name:"指立て伏せ",time:60,desc:"手のひらではなく指先だけで床をつく腕立て伏せ。10回 × 2〜3セット。指強化のためゆっくり丁寧に。"},
+  {name:"腹筋",time:90,desc:"仰向けで膝を立て、両手を頭の後ろに。へそを見るように上体を起こす。反動を使わず腹筋の力だけで30回 × 2セット。"},
+  {name:"背筋",time:90,desc:"うつ伏せで両手を頭の後ろ。上体をゆっくり持ち上げる。腰を反りすぎず、30回 × 2セット。"},
+  {name:"スクワット",time:90,desc:"肩幅に足を開き、つま先を少し外向きに。膝がつま先より前に出ないよう、お尻を後ろに引きながら30回 × 2セット。"},
+  {name:"ジャンプスクワット",time:90,desc:"通常のスクワットから素早く立ち上がりジャンプ！着地はクッションを効かせて静かに。15〜20回 × 2セット。"},
+  {name:"ランジスクワット",time:90,desc:"足を肩幅より広めに開いてワイドスタンスでスクワット。股関節の柔軟性も高まる。20回 × 2セット。"},
+  {name:"バービー（5種目）",time:150,desc:"① 立つ → ② しゃがむ → ③ 両手を床につく → ④ 足を後ろに伸ばしプランク姿勢 → ⑤ 腕立て1回 → 戻る。全力で10回 × 2セット！"},
+  {name:"ダッシュ・ランニング",time:300,desc:"短距離ダッシュ（20〜30m × 5〜8本）またはペース走。最後にジョグでクールダウンも忘れずに。"},
+];
+
+let currentIdx=-1, running=false, timeLeft=0, interval=null, started=false;
+let finishDateTime = null;
+
+function pad(n){return String(n).padStart(2,'0')}
+function secToMin(s){return pad(Math.floor(s/60))+':'+pad(s%60)}
+
+function getTodayKey(){
+  const d = new Date();
+  return `bukatsu_done_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`;
+}
+
+function renderList(){
+  document.getElementById('menuList').innerHTML = MENUS.map((m,i)=>{
+    let cls = i<currentIdx?'done':(i===currentIdx?'active':'');
+    let check = i<currentIdx?'✓':(i===currentIdx?'▶':'');
+    return `<div class="menu-item ${cls}" id="item${i}" onclick="toggleDesc(${i})">
+      <div class="item-header">
+        <span class="item-num">${i+1}</span>
+        <span class="item-name">${m.name}</span>
+        <span class="item-time"><i class="ti ti-clock"></i> ${secToMin(m.time)}</span>
+        <div class="item-check">${check}</div>
+      </div>
+      <div class="item-desc" id="desc${i}">${m.desc}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDesc(i){
+  document.getElementById('desc'+i).classList.toggle('open');
+}
+
+function updateTimer(){
+  document.getElementById('timerDisplay').textContent = secToMin(timeLeft);
+  if(currentIdx>=0 && currentIdx<MENUS.length){
+    const total = MENUS[currentIdx].time;
+    document.getElementById('progressBar').style.width = ((total-timeLeft)/total*100).toFixed(1)+'%';
+  }
+}
+
+function updateProgress(){
+  const done = currentIdx<0?0:currentIdx;
+  const remaining = MENUS.slice(Math.max(0,currentIdx)).reduce((a,m,i)=>a+(i===0?timeLeft:m.time),0);
+  document.getElementById('progressText').textContent = (done<0?0:done)+' / '+MENUS.length+' 完了';
+  document.getElementById('totalTimeLeft').textContent = '残り目安：'+secToMin(Math.max(0,remaining));
+}
+
+function startMenu(idx){
+  if(idx>=MENUS.length){
+    clearInterval(interval); running=false;
+    finishDateTime = new Date();
+    const timeStr = pad(finishDateTime.getHours())+':'+pad(finishDateTime.getMinutes());
+    document.getElementById('timerDisplay').textContent = '完了！';
+    document.getElementById('timerLabel').textContent = 'お疲れ様でした！';
+    document.getElementById('progressBar').style.width='100%';
+    document.getElementById('startBtn').disabled=true;
+    document.getElementById('startBtn').innerHTML='<i class="ti ti-check"></i> 完了';
+    document.getElementById('currentBanner').style.display='none';
+    document.getElementById('progressText').textContent=MENUS.length+' / '+MENUS.length+' 完了';
+    document.getElementById('totalTimeLeft').textContent='残り：00:00';
+    renderList();
+
+    // 完了パネル表示
+    document.getElementById('finishTimeText').textContent='⏰ 完了時刻：'+timeStr;
+    const donePanel = document.getElementById('donePanel');
+    donePanel.style.display='block';
+    donePanel.scrollIntoView({behavior:'smooth',block:'start'});
+
+    // 今日既に送信済みかチェック
+    if(localStorage.getItem(getTodayKey())){
+      document.getElementById('discordForm').style.display='none';
+      document.getElementById('alreadyDone').style.display='block';
+    }
+    return;
+  }
+  currentIdx=idx;
+  timeLeft=MENUS[idx].time;
+  document.getElementById('timerLabel').textContent='▶ '+MENUS[idx].name;
+  const b=document.getElementById('currentBanner');
+  b.style.display='block';
+  b.textContent='今のメニュー：'+MENUS[idx].name+'（'+secToMin(MENUS[idx].time)+'）';
+  document.getElementById('desc'+idx).classList.add('open');
+  updateTimer(); updateProgress(); renderList();
+  const el=document.getElementById('item'+idx);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function tick(){
+  if(timeLeft>0){timeLeft--; updateTimer(); updateProgress();}
+  else{startMenu(currentIdx+1);}
+}
+
+function startPause(){
+  if(!started){
+    started=true;
+    startMenu(0);
+    running=true;
+    interval=setInterval(tick,1000);
+    document.getElementById('startBtn').innerHTML='<i class="ti ti-player-pause"></i> 一時停止';
+    return;
+  }
+  if(running){
+    clearInterval(interval); running=false;
+    document.getElementById('startBtn').innerHTML='<i class="ti ti-player-play"></i> 再開';
+  } else {
+    interval=setInterval(tick,1000); running=true;
+    document.getElementById('startBtn').innerHTML='<i class="ti ti-player-pause"></i> 一時停止';
+  }
+}
+
+function resetAll(){
+  clearInterval(interval); running=false; started=false; currentIdx=-1; timeLeft=0;
+  finishDateTime=null;
+  document.getElementById('timerDisplay').textContent='00:00';
+  document.getElementById('timerLabel').textContent='準備中 — 開始ボタンを押してください';
+  document.getElementById('progressBar').style.width='0%';
+  document.getElementById('startBtn').innerHTML='<i class="ti ti-player-play"></i> 開始';
+  document.getElementById('startBtn').disabled=false;
+  document.getElementById('currentBanner').style.display='none';
+  document.getElementById('donePanel').style.display='none';
+  document.getElementById('progressText').textContent='0 / 10 完了';
+  document.getElementById('totalTimeLeft').textContent='合計目安：約25分';
+  document.getElementById('sendStatus').textContent='';
+  document.getElementById('nameInput').value='';
+  document.getElementById('discordForm').style.display='block';
+  document.getElementById('alreadyDone').style.display='none';
+  renderList();
+}
+
+async function sendToDiscord(){
+  const name = document.getElementById('nameInput').value.trim();
+  if(!name){
+    document.getElementById('sendStatus').innerHTML='<span class="send-ng">名前を入力してください</span>';
+    return;
+  }
+  const webhookUrl = localStorage.getItem('bukatsu_webhook') || '';
+  if(!webhookUrl){
+    document.getElementById('sendStatus').innerHTML='<span class="send-ng">⚠️ 設定が未完了です。</span>';
+    return;
+  }
+  const btn = document.getElementById('discordBtn');
+  btn.disabled=true;
+  btn.textContent='送信中...';
+  const now = finishDateTime || new Date();
+  const dateStr = `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())}`;
+  const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const payload = {
+    embeds:[{
+      title:'🏃 トレーニング完了！',
+      color:0x1D9E75,
+      fields:[
+        {name:'👤 名前',value:name,inline:true},
+        {name:'📅 日付',value:dateStr,inline:true},
+        {name:'⏰ 完了時刻',value:timeStr,inline:true},
+      ],
+      footer:{text:'部活トレーニングアプリ'}
+    }]
+  };
+  try{
+    const res = await fetch(webhookUrl,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    if(res.ok||res.status===204){
+      localStorage.setItem(getTodayKey(), '1');
+      document.getElementById('sendStatus').innerHTML='<span class="send-ok">✅ 記録しました！</span>';
+      document.getElementById('discordBtn').style.display='none';
+      document.getElementById('nameInput').disabled=true;
+    } else {
+      document.getElementById('sendStatus').innerHTML='<span class="send-ng">送信失敗 ('+res.status+')</span>';
+      btn.disabled=false;
+      btn.innerHTML='再送信';
+    }
+  }catch(err){
+    document.getElementById('sendStatus').innerHTML='<span class="send-ng">エラー：'+err.message+'</span>';
+    btn.disabled=false;
+  }
+}
+
+function saveWebhook(){
+  const val = document.getElementById('webhookInput').value.trim();
+  if(!val.startsWith('https://discord.com/api/webhooks/')){
+    document.getElementById('whSaveMsg').textContent='⚠️ 正しいDiscord Webhook URLを入力してください';
+    document.getElementById('whSaveMsg').style.color='#e53';
+    return;
+  }
+  localStorage.setItem('bukatsu_webhook', val);
+  document.getElementById('whSaveMsg').textContent='✅ 保存しました';
+  document.getElementById('whSaveMsg').style.color='#1D9E75';
+}
+
+const DEFAULT_WEBHOOK = 'https://x.gd/SnEai';
+
+// 起動時にWebhook URLを復元
+window.addEventListener('DOMContentLoaded',()=>{
+  if(!localStorage.getItem('bukatsu_webhook')){
+    localStorage.setItem('bukatsu_webhook', DEFAULT_WEBHOOK);
+  }
+  const saved = localStorage.getItem('bukatsu_webhook');
+  if(saved) document.getElementById('webhookInput').value=saved;
+  renderList();
+
+  // Service Worker登録
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').then(()=>{
+      console.log('SW registered');
+    }).catch(e=>console.log('SW error',e));
+  }
+});
+</script>
+</body>
+</html>
